@@ -57,6 +57,12 @@ module Middleman
                    default: false,
                    type: :boolean
 
+      class_option 'as_index',
+                   aliases: "-i",
+                   desc:    "Generate an directory with and article as index file within",
+                   default: false,
+                   type:    :boolean
+
       class_option 'tags',
                    aliases: '-t',
                    desc: 'A list of comma-separated tags for the post'
@@ -93,7 +99,18 @@ module Middleman
         article_path          = apply_uri_template path_template, params
         absolute_article_path = File.join(app.source_dir, article_path + blog_inst.options.default_extension)
 
-        template blog_inst.options.new_article_template, absolute_article_path
+        if options[ :as_index ]
+          article_directory_path = extract_directory_path( File.join( app.source_dir, article_path ) )
+          empty_directory article_directory_path
+          template blog_inst.options.new_article_template, File.join( article_directory_path, "index.html" + blog_inst.options.default_extension )
+        else
+          template blog_inst.options.new_article_template, absolute_article_path
+
+          # Subdirectory option process
+          if options[ :subdirectory ]
+            empty_directory extract_directory_path( File.join( app.source_dir, article_path ) )
+          end
+        end
 
         # Edit option process
         if options[:edit]
